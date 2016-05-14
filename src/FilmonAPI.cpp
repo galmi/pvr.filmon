@@ -247,17 +247,9 @@ bool filmonAPIlogin(std::string username, std::string password) {
 			Json::Value root;
 			Json::Reader reader;
 			reader.parse(response, root);
-			// Favorite channels
 			channelList.clear();
-			Json::Value favouriteChannels = root["favorite-channels"];
-			unsigned int channelCount = favouriteChannels.size();
-			for (unsigned int channel = 0; channel < channelCount; channel++) {
-				Json::Value chId = favouriteChannels[channel]["channel"]["id"];
-				channelList.push_back(chId.asUInt());
-				XBMC->Log(LOG_INFO, "added channel %u",
-					chId.asUInt());
-			}
-			clearResponse();
+			//Load channels list
+			filmonGetChannels();
 		}
 	}
 	return res;
@@ -325,6 +317,24 @@ std::string filmonAPIgetRtmpStream(std::string url, std::string name) {
 		XBMC->Log(LOG_ERROR, "no stream available");
 		return std::string("");
 	}
+}
+
+// channels list
+bool filmonGetChannels() {
+	bool res = filmonRequest("tv/api/channels", sessionKeyParam);
+	if (res == true) {
+		Json::Value root;
+		Json::Reader reader;
+		reader.parse(response, root);
+		for (unsigned int i = 0; i < root.size(); i++) {
+			Json::Value chId = root[i]["id"];
+			channelList.push_back(chId.asUInt());
+			XBMC->Log(LOG_INFO, "added channel %u",
+					  chId.asUInt());
+		}
+		clearResponse();
+	}
+	return res;
 }
 
 // Channel

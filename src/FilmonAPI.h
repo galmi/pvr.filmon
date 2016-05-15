@@ -126,6 +126,7 @@ bool filmonAPIdeleteTimer(unsigned int timerId, bool bForceDelete);
 bool filmonAPIaddTimer(int channelId, time_t startTime, time_t endTime);
 bool filmonAPIdeleteRecording(unsigned int recordingId);
 bool filmonAPIgetChannel(unsigned int channelId, FILMON_CHANNEL *channel);
+bool filmonGetChannels(bool hasSubscriptions);
 std::vector<unsigned int> filmonAPIgetChannels(void);
 unsigned int filmonAPIgetChannelCount(void);
 std::vector<FILMON_CHANNEL_GROUP> filmonAPIgetChannelGroups();

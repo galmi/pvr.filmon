@@ -247,17 +247,11 @@ bool filmonAPIlogin(std::string username, std::string password) {
 			Json::Value root;
 			Json::Reader reader;
 			reader.parse(response, root);
-			// Favorite channels
+			bool hasSubscription = root["subscriptions"].size() > 0;
 			channelList.clear();
-			Json::Value favouriteChannels = root["favorite-channels"];
-			unsigned int channelCount = favouriteChannels.size();
-			for (unsigned int channel = 0; channel < channelCount; channel++) {
-				Json::Value chId = favouriteChannels[channel]["channel"]["id"];
-				channelList.push_back(chId.asUInt());
-				XBMC->Log(LOG_INFO, "added channel %u",
-					chId.asUInt());
-			}
 			clearResponse();
+			//Load channels list
+			filmonGetChannels(hasSubscription);
 		}
 	}
 	return res;
@@ -325,6 +319,31 @@ std::string filmonAPIgetRtmpStream(std::string url, std::string name) {
 		XBMC->Log(LOG_ERROR, "no stream available");
 		return std::string("");
 	}
+}
+
+// channels list
+bool filmonGetChannels(bool hasSubscriptions) {
+	bool res = filmonRequest("tv/api/channels", sessionKeyParam);
+	if (res == true) {
+		Json::Value root;
+		Json::Reader reader;
+		reader.parse(response, root);
+		XBMC->Log(LOG_INFO, "channels count %u", root.size());
+		for (unsigned int i = 0; i < root.size(); i++) {
+			Json::Value chId = root[i]["id"];
+			Json::Value isFree = root[i]["is_free"];
+			Json::Value isFreeSDMode = root[i]["is_free_sd_mode"];
+			if (stringToInt(isFree.asString()) == 1 || hasSubscriptions ||
+				(!g_boolPreferHd && stringToInt(isFreeSDMode.asString()) == 1)) {
+				channelList.push_back(stringToInt(chId.asString()));
+				XBMC->Log(LOG_INFO, "added channel %u", stringToInt(chId.asString()));
+			} else {
+				XBMC->Log(LOG_INFO, "skipped paid channel %u", stringToInt(chId.asString()));
+			}
+		}
+		clearResponse();
+	}
+	return res;
 }
 
 // Channel
